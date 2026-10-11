@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Nightly against the latest ketapay-php (its main branch, and the newest Laravel releases), so an
+  # SDK change that breaks the bridge shows up the next morning, before any app updates to it.
+  schedule:
+    - cron: '0 3 * * *' # 04:00 Lagos
+  workflow_dispatch:
   workflow_call: # the publish workflow runs this whole suite on the exact tag before publishing
     inputs:
       ref:
@@ -14,8 +19,6 @@ on:
 permissions:
   contents: read
 
-# Until ketapay/ketapay-php is on Packagist, composer.json reads it from ../ketapay-php, so the jobs
-# check it out next to this repo. Once it is published, drop the path repository and that checkout.
 jobs:
   pr-title:
     name: PR title
@@ -55,16 +58,11 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
           path: ketapay-laravel
-      - uses: actions/checkout@v7
-        with:
-          repository: KetaPay/ketapay-php
-          ref: main
-          path: ketapay-php
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           working-directory: ketapay-laravel
           dependency-versions: highest
@@ -77,6 +75,16 @@ jobs:
       - name: Static analysis (Larastan, level max)
         working-directory: ketapay-laravel
         run: composer lint
+      - name: Only src/, config/, composer.json, LICENSE and README.md ship (what Packagist users download)
+        working-directory: ketapay-laravel
+        run: |
+          unexpected=$(git archive HEAD | tar -t | grep -v '/$' | grep -vE '^(src/.+\.php|config/[^/]+\.php|composer\.json|LICENSE|README\.md)$' || true)
+          if [ -n "$unexpected" ]; then
+            echo "::error::The package would ship files it shouldn't. Add them to .gitattributes (export-ignore):"
+            echo "$unexpected"
+            exit 1
+          fi
+          echo "Package contents: $(git archive HEAD | tar -t | grep -vc '/$') files, all expected"
 
   tests:
     name: Tests (PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }})
@@ -97,15 +105,14 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
           path: ketapay-laravel
-      - uses: actions/checkout@v7
-        with:
-          repository: KetaPay/ketapay-php
-          ref: main
-          path: ketapay-php
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           coverage: none
+      - name: Nightly and manual runs use ketapay-php's main branch instead of the latest release
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        working-directory: ketapay-laravel
+        run: composer require --no-update --no-interaction "ketapay/ketapay-php:dev-main"
       - name: Pin Laravel ${{ matrix.laravel }}
         working-directory: ketapay-laravel
         run: |
@@ -113,7 +120,7 @@ jobs:
             "illuminate/contracts:^${{ matrix.laravel }}.0" "illuminate/http:^${{ matrix.laravel }}.0" \
             "illuminate/routing:^${{ matrix.laravel }}.0" "illuminate/support:^${{ matrix.laravel }}.0"
           composer require --dev --no-update --no-interaction "orchestra/testbench:^${{ matrix.testbench }}.0"
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           working-directory: ketapay-laravel
           dependency-versions: highest

@@ -3,7 +3,14 @@
     "description": "Laravel integration for the KetaPay PHP library: config, facade, and verified webhooks as Laravel events",
     "type": "library",
     "license": "MIT",
-    "keywords": ["ketapay", "escrow", "payments", "nigeria", "laravel", "webhooks"],
+    "keywords": [
+        "ketapay",
+        "escrow",
+        "payments",
+        "nigeria",
+        "laravel",
+        "webhooks"
+    ],
     "homepage": "https://github.com/KetaPay/ketapay-laravel",
     "support": {
         "issues": "https://github.com/KetaPay/ketapay-laravel/issues",
@@ -23,17 +30,6 @@
         "orchestra/testbench": "^10.0 || ^11.0",
         "phpunit/phpunit": "^11.5 || ^12.0"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../ketapay-php",
-            "options": {
-                "versions": {
-                    "ketapay/ketapay-php": "0.1.0-beta.1"
-                }
-            }
-        }
-    ],
     "autoload": {
         "psr-4": {
             "KetaPay\\Laravel\\": "src/"
@@ -46,7 +42,9 @@
     },
     "extra": {
         "laravel": {
-            "providers": ["KetaPay\\Laravel\\KetaPayServiceProvider"],
+            "providers": [
+                "KetaPay\\Laravel\\KetaPayServiceProvider"
+            ],
             "aliases": {
                 "KetaPay": "KetaPay\\Laravel\\Facades\\KetaPay"
             }

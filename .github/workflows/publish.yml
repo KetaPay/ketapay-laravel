@@ -1,12 +1,12 @@
 # Publishes a tagged release to Packagist. Manual only: Actions tab > "Publish to Packagist" > Run workflow.
 # Only dudox can run it, and only while the repo variable PACKAGIST_PUBLISH_ENABLED=true.
 #
-# Packagist reads versions from the repo's tags, so "publishing" means telling Packagist to read the new
+# Packagist reads versions from the repo's tags and lists them by tag name (v0.1.0-beta.1, with the v), so "publishing" means telling Packagist to read the new
 # tag. The Packagist package must NOT have the GitHub auto-update hook, or every tag would go out unchecked.
 # ketapay/ketapay-php must be on Packagist first: this package requires it.
 #
 # The publish job runs in the `publish` environment, which needs dudox's approval before it starts.
-# Auth: PACKAGIST_TOKEN (Packagist API token of dudox) from Infisical (ketapay-sdks, prod).
+# Auth: PACKAGIST_TOKEN (the Safe API Token of the Packagist account "ketapay") from Infisical (ketapay-sdks, prod).
 name: Publish to Packagist
 
 on:
@@ -56,7 +56,7 @@ jobs:
           if git show "$tag:composer.json" | grep -q '"type": "path"'; then
             echo "::error::composer.json still reads ketapay-php from a path repository. Remove it once ketapay/ketapay-php is on Packagist."; exit 1
           fi
-          if curl -fsS https://repo.packagist.org/p2/ketapay/ketapay-laravel.json 2>/dev/null | grep -q "\"version\":\"$version\""; then
+          if curl -fsS https://repo.packagist.org/p2/ketapay/ketapay-laravel.json 2>/dev/null | grep -qF -e "\"version\":\"v$version\"" -e "\"version\":\"$version\""; then
             echo "::error::ketapay/ketapay-laravel $version is already on Packagist."; exit 1
           fi
           { echo "tag=$tag"; echo "version=$version"; } >> "$GITHUB_OUTPUT"
@@ -90,14 +90,14 @@ jobs:
         run: |
           if [ -z "$PACKAGIST_TOKEN" ]; then echo "::error::PACKAGIST_TOKEN missing from Infisical prod"; exit 1; fi
           curl -fsS -X POST -H 'Content-Type: application/json' \
-            "https://packagist.org/api/update-package?username=dudox&apiToken=${PACKAGIST_TOKEN}" \
+            "https://packagist.org/api/update-package?username=ketapay&apiToken=${PACKAGIST_TOKEN}" \
             -d '{"repository":{"url":"https://github.com/KetaPay/ketapay-laravel"}}'
       - name: Wait until Packagist lists the version
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           for i in $(seq 1 30); do
-            if curl -fsS "https://repo.packagist.org/p2/ketapay/ketapay-laravel.json?t=$(date +%s)" | grep -q "\"version\":\"$VERSION\""; then
+            if curl -fsS "https://repo.packagist.org/p2/ketapay/ketapay-laravel.json?t=$(date +%s)" | grep -qF -e "\"version\":\"v$VERSION\"" -e "\"version\":\"$VERSION\""; then
               {
                 echo "### Published ketapay/ketapay-laravel $VERSION"
                 echo
