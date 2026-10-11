@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call: # the publish workflow runs this whole suite on the exact tag before publishing
+    inputs:
+      ref:
+        description: Git ref to check (defaults to the triggering commit)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+# Until ketapay/ketapay-php is on Packagist, composer.json reads it from ../ketapay-php, so the jobs
+# check it out next to this repo. Once it is published, drop the path repository and that checkout.
+jobs:
+  pr-title:
+    name: PR title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional commit title (release notes are built from it)
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|refactor|docs|test|build|ci|chore|revert)(\([a-z0-9._-]+\))?!?: .+'
+          if [[ ! "$TITLE" =~ $pattern ]]; then
+            echo "::error::PR title must be a conventional commit, like 'feat: add refunds' or 'fix(webhooks): ...'."
+            exit 1
+          fi
+
+  secrets:
+    name: Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0 # the whole history: a secret removed in a later commit is still exposed
+      - name: No secrets anywhere in the history (gitleaks, with KetaPay's own patterns in .gitleaks.toml)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks git --config .gitleaks.toml --redact --no-banner --log-opts="--all" .
+
+  quality:
+    name: Format, lint, types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          path: ketapay-laravel
+      - uses: actions/checkout@v7
+        with:
+          repository: KetaPay/ketapay-php
+          ref: main
+          path: ketapay-php
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: ketapay-laravel
+          dependency-versions: highest
+      - name: composer.json is valid
+        working-directory: ketapay-laravel
+        run: composer validate --strict --no-check-publish
+      - name: Formatting
+        working-directory: ketapay-laravel
+        run: composer format:check
+      - name: Static analysis (Larastan, level max)
+        working-directory: ketapay-laravel
+        run: composer lint
+
+  tests:
+    name: Tests (PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Every supported Laravel, on its oldest and newest PHP. Only Laravel versions that still get
+          # security fixes: Composer refuses to install releases with open advisories (10 and 11).
+          - { php: '8.2', laravel: '12', testbench: '10' }
+          - { php: '8.4', laravel: '12', testbench: '10' }
+          - { php: '8.5', laravel: '12', testbench: '10' }
+          - { php: '8.3', laravel: '13', testbench: '11' }
+          - { php: '8.5', laravel: '13', testbench: '11' }
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          path: ketapay-laravel
+      - uses: actions/checkout@v7
+        with:
+          repository: KetaPay/ketapay-php
+          ref: main
+          path: ketapay-php
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Pin Laravel ${{ matrix.laravel }}
+        working-directory: ketapay-laravel
+        run: |
+          composer require --no-update --no-interaction \
+            "illuminate/contracts:^${{ matrix.laravel }}.0" "illuminate/http:^${{ matrix.laravel }}.0" \
+            "illuminate/routing:^${{ matrix.laravel }}.0" "illuminate/support:^${{ matrix.laravel }}.0"
+          composer require --dev --no-update --no-interaction "orchestra/testbench:^${{ matrix.testbench }}.0"
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: ketapay-laravel
+          dependency-versions: highest
+      - name: Tests
+        working-directory: ketapay-laravel
+        run: vendor/bin/phpunit --no-progress --testdox

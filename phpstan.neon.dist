@@ -1,0 +1,14 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # Analyse as the oldest PHP this package supports: flags newer syntax even on a newer local PHP. It does NOT catch
+    # newer functions or constants (they exist in the PHP running PHPStan): CI's run on that PHP does.
+    phpVersion: 80200
+    level: max
+    paths:
+        - src
+        - tests
+    tmpDir: .phpstan-cache
+    # Config values and request input are checked at runtime, because most callers run no static analysis.
+    treatPhpDocTypesAsCertain: false

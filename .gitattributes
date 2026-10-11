@@ -1,0 +1,16 @@
+# Only src/, config/, composer.json, LICENSE and README.md ship to customers.
+/.github export-ignore
+/.githooks export-ignore
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+/release-please-config.json export-ignore
+/.release-please-manifest.json export-ignore
+/version.txt export-ignore
+/CHANGELOG.md export-ignore
+/CONTRIBUTING.md export-ignore
+/SECURITY.md export-ignore
+/.gitleaks.toml export-ignore
