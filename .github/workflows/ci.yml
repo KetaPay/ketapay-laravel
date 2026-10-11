@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Nightly against the latest ketapay-php (its main branch, and the newest Laravel releases), so an
+  # SDK change that breaks the bridge shows up the next morning, before any app updates to it.
+  schedule:
+    - cron: '0 3 * * *' # 04:00 Lagos
+  workflow_dispatch:
   workflow_call: # the publish workflow runs this whole suite on the exact tag before publishing
     inputs:
       ref:
