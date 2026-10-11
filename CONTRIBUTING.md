@@ -23,7 +23,7 @@ The Laravel versions that still get security fixes: 12 and 13, on PHP 8.2 or lat
 
 The PHP library itself supports PHP 8.1: apps on older Laravel use it directly.
 
-No composer.lock is committed: CI pins each Laravel version and resolves the rest.
+No composer.lock is committed: CI pins each Laravel version and resolves the rest. CI also runs every night against ketapay-php's latest code, so an SDK change that breaks the bridge is caught before it ships; a red nightly run is fixed in ketapay-php or here before the next SDK release.
 
 ## Working locally
 
