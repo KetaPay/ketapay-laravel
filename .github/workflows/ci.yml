@@ -77,6 +77,16 @@ jobs:
       - name: Static analysis (Larastan, level max)
         working-directory: ketapay-laravel
         run: composer lint
+      - name: Only src/, config/, composer.json, LICENSE and README.md ship (what Packagist users download)
+        working-directory: ketapay-laravel
+        run: |
+          unexpected=$(git archive HEAD | tar -t | grep -v '/$' | grep -vE '^(src/.+\.php|config/[^/]+\.php|composer\.json|LICENSE|README\.md)$' || true)
+          if [ -n "$unexpected" ]; then
+            echo "::error::The package would ship files it shouldn't. Add them to .gitattributes (export-ignore):"
+            echo "$unexpected"
+            exit 1
+          fi
+          echo "Package contents: $(git archive HEAD | tar -t | grep -vc '/$') files, all expected"
 
   tests:
     name: Tests (PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }})
