@@ -19,8 +19,6 @@ on:
 permissions:
   contents: read
 
-# Until ketapay/ketapay-php is on Packagist, composer.json reads it from ../ketapay-php, so the jobs
-# check it out next to this repo. Once it is published, drop the path repository and that checkout.
 jobs:
   pr-title:
     name: PR title
@@ -60,11 +58,6 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
           path: ketapay-laravel
-      - uses: actions/checkout@v7
-        with:
-          repository: KetaPay/ketapay-php
-          ref: main
-          path: ketapay-php
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -112,15 +105,14 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
           path: ketapay-laravel
-      - uses: actions/checkout@v7
-        with:
-          repository: KetaPay/ketapay-php
-          ref: main
-          path: ketapay-php
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           coverage: none
+      - name: Nightly and manual runs use ketapay-php's main branch instead of the latest release
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        working-directory: ketapay-laravel
+        run: composer require --no-update --no-interaction "ketapay/ketapay-php:dev-main"
       - name: Pin Laravel ${{ matrix.laravel }}
         working-directory: ketapay-laravel
         run: |
