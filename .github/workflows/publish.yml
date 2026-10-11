@@ -6,7 +6,7 @@
 # ketapay/ketapay-php must be on Packagist first: this package requires it.
 #
 # The publish job runs in the `publish` environment, which needs dudox's approval before it starts.
-# Auth: PACKAGIST_TOKEN (Packagist API token of dudox) from Infisical (ketapay-sdks, prod).
+# Auth: PACKAGIST_TOKEN (the Safe API Token of the Packagist account "ketapay") from Infisical (ketapay-sdks, prod).
 name: Publish to Packagist
 
 on:
@@ -90,7 +90,7 @@ jobs:
         run: |
           if [ -z "$PACKAGIST_TOKEN" ]; then echo "::error::PACKAGIST_TOKEN missing from Infisical prod"; exit 1; fi
           curl -fsS -X POST -H 'Content-Type: application/json' \
-            "https://packagist.org/api/update-package?username=dudox&apiToken=${PACKAGIST_TOKEN}" \
+            "https://packagist.org/api/update-package?username=ketapay&apiToken=${PACKAGIST_TOKEN}" \
             -d '{"repository":{"url":"https://github.com/KetaPay/ketapay-laravel"}}'
       - name: Wait until Packagist lists the version
         env:
