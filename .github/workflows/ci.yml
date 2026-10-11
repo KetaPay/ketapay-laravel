@@ -64,7 +64,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           working-directory: ketapay-laravel
           dependency-versions: highest
@@ -113,7 +113,7 @@ jobs:
             "illuminate/contracts:^${{ matrix.laravel }}.0" "illuminate/http:^${{ matrix.laravel }}.0" \
             "illuminate/routing:^${{ matrix.laravel }}.0" "illuminate/support:^${{ matrix.laravel }}.0"
           composer require --dev --no-update --no-interaction "orchestra/testbench:^${{ matrix.testbench }}.0"
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           working-directory: ketapay-laravel
           dependency-versions: highest
