@@ -35,7 +35,7 @@ Escrow/
 └── ketapay-laravel/
 ```
 
-CI does the same with a read-only deploy key on ketapay-php (`KETAPAY_PHP_DEPLOY_KEY` in Infisical `ketapay-sdks`, prod). Once ketapay-php is published, remove the `repositories` entry from composer.json, the second checkout in ci.yml and the deploy key. The publish workflow refuses to release while the path repository is there.
+CI checks both out side by side the same way. Once ketapay-php is published, remove the `repositories` entry from composer.json and the second checkout in ci.yml. The publish workflow refuses to release while the path repository is there.
 
 ```sh
 composer install
@@ -53,3 +53,7 @@ A pre-push hook runs formatting, Larastan and the tests; `composer install` turn
 PR titles are conventional commits (`feat:`, `fix:` ...). Release Please keeps a release PR with the next version (`version.txt`) and changelog; merging it tags the release. Publishing is manual and owner-only: Actions > **Publish to Packagist** runs the full CI on the tag, then asks Packagist to read it. The Packagist package must not have GitHub's auto-update hook. ketapay/ketapay-php must be on Packagist first.
 
 Switches (repo variables): `RELEASES_ENABLED`, `PACKAGIST_PUBLISH_ENABLED`. Secrets come from the Infisical project `ketapay-sdks`, shared by every KetaPay SDK.
+
+## Secrets and security
+
+No secret ever goes in this repo. GitHub secret scanning with push protection blocks known token formats, and the **Secrets** CI check runs gitleaks over the whole history with KetaPay's own patterns (`.gitleaks.toml`). Vulnerabilities are reported privately (see SECURITY.md). The publish job runs in the GitHub environment `publish`, so it waits for dudox's approval.

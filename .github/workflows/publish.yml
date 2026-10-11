@@ -5,6 +5,7 @@
 # tag. The Packagist package must NOT have the GitHub auto-update hook, or every tag would go out unchecked.
 # ketapay/ketapay-php must be on Packagist first: this package requires it.
 #
+# The publish job runs in the `publish` environment, which needs dudox's approval before it starts.
 # Auth: PACKAGIST_TOKEN (Packagist API token of dudox) from Infisical (ketapay-sdks, prod).
 name: Publish to Packagist
 
@@ -65,14 +66,12 @@ jobs:
     name: Full CI on the release tag
     needs: prepare
     uses: ./.github/workflows/ci.yml
-    permissions:
-      contents: read
-      id-token: write
     with:
       ref: ${{ needs.prepare.outputs.tag }}
 
   publish:
     name: Publish
+    environment: publish # requires dudox's approval (repo settings > Environments)
     needs: [prepare, checks]
     runs-on: ubuntu-latest
     permissions:

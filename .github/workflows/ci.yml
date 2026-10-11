@@ -14,9 +14,8 @@ on:
 permissions:
   contents: read
 
-# Until ketapay/ketapay-php is on Packagist, composer.json reads it from ../ketapay-php, so every job
-# checks it out next to this repo with a read-only deploy key (KETAPAY_PHP_DEPLOY_KEY in Infisical
-# ketapay-sdks, prod). Once it is published, drop the path repository, this step and the key.
+# Until ketapay/ketapay-php is on Packagist, composer.json reads it from ../ketapay-php, so the jobs
+# check it out next to this repo. Once it is published, drop the path repository and that checkout.
 jobs:
   pr-title:
     name: PR title
@@ -33,21 +32,25 @@ jobs:
             exit 1
           fi
 
+  secrets:
+    name: Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0 # the whole history: a secret removed in a later commit is still exposed
+      - name: No secrets anywhere in the history (gitleaks, with KetaPay's own patterns in .gitleaks.toml)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks git --config .gitleaks.toml --redact --no-banner --log-opts="--all" .
+
   quality:
     name: Format, lint, types
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # Infisical login
     steps:
-      - name: Fetch the ketapay-php deploy key from Infisical
-        uses: Infisical/secrets-action@v1.0.18
-        with:
-          method: 'oidc'
-          oidc-audience: 'https://infisical.com'
-          identity-id: 'ef5c6cbd-0f7e-49a9-a6b7-8d115c2abbd2'
-          project-slug: 'ketapay-sdks-pz5w' # one Infisical project for every KetaPay SDK
-          env-slug: 'prod'
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
@@ -57,7 +60,6 @@ jobs:
           repository: KetaPay/ketapay-php
           ref: main
           path: ketapay-php
-          ssh-key: ${{ env.KETAPAY_PHP_DEPLOY_KEY }}
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -79,9 +81,6 @@ jobs:
   tests:
     name: Tests (PHP ${{ matrix.php }}, Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write # Infisical login
     strategy:
       fail-fast: false
       matrix:
@@ -94,14 +93,6 @@ jobs:
           - { php: '8.3', laravel: '13', testbench: '11' }
           - { php: '8.5', laravel: '13', testbench: '11' }
     steps:
-      - name: Fetch the ketapay-php deploy key from Infisical
-        uses: Infisical/secrets-action@v1.0.18
-        with:
-          method: 'oidc'
-          oidc-audience: 'https://infisical.com'
-          identity-id: 'ef5c6cbd-0f7e-49a9-a6b7-8d115c2abbd2'
-          project-slug: 'ketapay-sdks-pz5w' # one Infisical project for every KetaPay SDK
-          env-slug: 'prod'
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
@@ -111,7 +102,6 @@ jobs:
           repository: KetaPay/ketapay-php
           ref: main
           path: ketapay-php
-          ssh-key: ${{ env.KETAPAY_PHP_DEPLOY_KEY }}
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}

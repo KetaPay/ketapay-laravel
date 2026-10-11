@@ -12,3 +12,5 @@
 /version.txt export-ignore
 /CHANGELOG.md export-ignore
 /CONTRIBUTING.md export-ignore
+/SECURITY.md export-ignore
+/.gitleaks.toml export-ignore
