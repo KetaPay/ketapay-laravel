@@ -1,0 +1,28 @@
+# Release Please keeps a release PR up to date from conventional commits (feat:, fix:, ...): version
+# bump and changelog. Merging that PR tags the version (v0.1.0-beta.1) and creates a GitHub release.
+# Nothing is published here: "Publish to Packagist" is a separate, manual step only dudox can run.
+#
+# Switch: repo variable RELEASES_ENABLED=true.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    if: vars.RELEASES_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
