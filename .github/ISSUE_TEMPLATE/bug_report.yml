@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in the library doesn't work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Never paste secret keys, customer tokens or webhook secrets here.** If you exposed one, roll it in the KetaPay dashboard now. Security problems go through **Security > Report a vulnerability**, not issues.
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: "0.1.0-beta.1"
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: PHP and Laravel versions
+    validations:
+      required: true
+  - type: input
+    id: request-id
+    attributes:
+      label: Request id
+      description: "From the error (`requestId`) or the response, if a call to KetaPay was involved. It lets us find the request in our logs."
+      placeholder: req_...
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Code to reproduce
+      description: The smallest snippet that shows it, with keys and personal data removed.
+      render: text
