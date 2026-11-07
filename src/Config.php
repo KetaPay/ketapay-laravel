@@ -19,7 +19,7 @@ final class Config
      * The KetaPay client's config. A `KetaPay\Http\Transport` bound in the container is used to send
      * requests, for example a fake in your tests.
      *
-     * @return array{apiKey: string, baseUrl?: string, maxRetries: int, timeoutMs: int, logLevel: 'off'|'error'|'warn'|'info'|'debug', logger: LoggerInterface, transport?: Transport}
+     * @return array{apiKey: string, baseUrl?: string, maxRetries: int, timeoutMs: int, logLevel: 'off'|'error'|'warn'|'info'|'debug', logger: LoggerInterface, appInfo: array{name: string, version: string}, transport?: Transport}
      */
     public static function client(Container $app): array
     {
@@ -42,6 +42,7 @@ final class Config
             'timeoutMs' => self::int($app, 'ketapay.timeout_ms', 30_000),
             'logLevel' => $level,
             'logger' => $logger,
+            'appInfo' => ['name' => 'ketapay-laravel', 'version' => KetaPayServiceProvider::VERSION],
         ];
         if ($app->bound(Transport::class)) {
             $transport = $app->make(Transport::class);

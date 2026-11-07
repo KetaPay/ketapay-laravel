@@ -12,6 +12,10 @@
         <testsuite name="default">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!-- The bridge against the KetaPay API with sandbox keys. Run with `composer test:e2e`. -->
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

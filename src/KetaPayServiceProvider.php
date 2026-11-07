@@ -17,6 +17,9 @@ use KetaPay\Laravel\Http\Middleware\VerifyWebhookSignature;
  */
 final class KetaPayServiceProvider extends ServiceProvider
 {
+    /** Sent in the User-Agent with the SDK's own, so KetaPay can tell Laravel apps apart. */
+    public const VERSION = '0.1.0-beta.1'; // x-release-please-version
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/ketapay.php', 'ketapay');

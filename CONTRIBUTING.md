@@ -14,7 +14,9 @@ src/
 ├── Http/Controllers/WebhookController      dedupes by event id, dispatches events, answers 200
 ├── Events/WebhookReceived.php              dispatched as the class and as ketapay.<type>
 └── Testing/InteractsWithKetaPayWebhooks    ketapayEvent() and postKetaPayWebhook() for app tests
-tests/Feature/                              Orchestra Testbench: client, webhooks, route options
+tests/Feature/                              Orchestra Testbench: client, webhooks, route options, catalogue coverage
+tests/E2E/                                  the bridge against the API with sandbox keys (LE2E-xxx)
+tests/test-catalogue.md                     synced copy of the Laravel test catalogue (do not edit)
 ```
 
 ## Supported versions
@@ -32,11 +34,18 @@ ketapay-php comes from Packagist (`^0.1@beta`). To try the bridge against a loca
 ```sh
 composer install
 composer test           # Testbench feature tests
+composer test:e2e       # against the API: needs KETAPAY_E2E_BASE_URL and KETAPAY_E2E_SECRET_KEY
 composer lint           # Larastan, level max
 composer format         # PER-CS 2.0
 ```
 
 To test against another Laravel: `composer require --no-update "illuminate/support:^11.0" "orchestra/testbench:^9.0"` (and the other `illuminate/*` packages), then `composer update`. Don't commit that.
+
+E2E settings live in Infisical (project `ketapay-sdks`, environment `staging`); CI reads them there. Locally, point them at your local API (`http://127.0.0.1:8000/v1`) with a key from `api/scripts/seed-e2e-businesses.sh --local`. Without them the E2E tests skip.
+
+Scenarios are listed by ID in the [Laravel test catalogue](https://github.com/KetaPay/docs/blob/main/openapi/public/SDK_LARAVEL_TEST_CATALOGUE.md). A new scenario is a row there first, then `composer sync-catalogue` and a test tagged with its ID; the tests fail while a row has no tagged test.
+
+The bridge names itself in the User-Agent as `ketapay-laravel/<version>`; release-please keeps `KetaPayServiceProvider::VERSION` in step with `version.txt`.
 
 A pre-push hook runs formatting, Larastan and the tests; `composer install` turns it on.
 

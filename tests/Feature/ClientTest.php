@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use KetaPay\Http\Transport;
 use KetaPay\KetaPay;
 use KetaPay\Laravel\Facades\KetaPay as KetaPayFacade;
+use KetaPay\Laravel\KetaPayServiceProvider;
 use KetaPay\Laravel\Tests\Support\FakeTransport;
 use KetaPay\Laravel\Tests\TestCase;
 use KetaPay\Resources\Escrows;
@@ -43,6 +44,18 @@ final class ClientTest extends TestCase
         self::assertSame('https://staging.example.com/v1/escrows/e1', $fake->requests[0]->url);
         self::assertSame('Bearer sk_test_laravel', $fake->requests[0]->headers['Authorization']);
         self::assertSame(5000, $fake->requests[0]->timeoutMs);
+    }
+
+    #[TestDox('names itself in the User-Agent as ketapay-laravel/<version>, the released version')]
+    public function testAppInfo(): void
+    {
+        $fake = new FakeTransport(['object' => 'escrow', 'id' => 'e1']);
+        $this->laravel()->instance(Transport::class, $fake);
+
+        $this->laravel()->make(KetaPay::class)->escrows->retrieve('e1');
+
+        self::assertStringEndsWith(' ketapay-laravel/' . KetaPayServiceProvider::VERSION, $fake->requests[0]->headers['User-Agent']);
+        self::assertSame(trim((string) file_get_contents(__DIR__ . '/../../version.txt')), KetaPayServiceProvider::VERSION, 'release-please keeps both in step');
     }
 
     #[TestDox('reaches resources through the facade, as methods')]

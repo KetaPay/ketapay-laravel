@@ -4,5 +4,5 @@ set -e
 echo "pre-push: formatting, static analysis, tests"
 vendor/bin/php-cs-fixer fix --dry-run --show-progress=none
 vendor/bin/phpstan analyse --memory-limit=1G --no-progress
-vendor/bin/phpunit --no-progress
+vendor/bin/phpunit --testsuite default --no-progress
 echo "pre-push: all checks passed"
