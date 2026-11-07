@@ -9,7 +9,13 @@
       "prerelease-type": "beta",
       "versioning": "prerelease",
       "release-as": "0.1.0-beta.1",
-      "include-component-in-tag": false
+      "include-component-in-tag": false,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "src/KetaPayServiceProvider.php"
+        }
+      ]
     }
   }
 }
