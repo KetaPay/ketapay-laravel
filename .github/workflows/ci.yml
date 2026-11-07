@@ -126,4 +126,4 @@ jobs:
           dependency-versions: highest
       - name: Tests
         working-directory: ketapay-laravel
-        run: vendor/bin/phpunit --no-progress --testdox
+        run: vendor/bin/phpunit --testsuite default --no-progress --testdox

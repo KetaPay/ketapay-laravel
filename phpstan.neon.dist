@@ -9,6 +9,7 @@ parameters:
     paths:
         - src
         - tests
+        - scripts
     tmpDir: .phpstan-cache
     # Config values and request input are checked at runtime, because most callers run no static analysis.
     treatPhpDocTypesAsCertain: false

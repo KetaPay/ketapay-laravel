@@ -60,7 +60,9 @@
         "format": "php-cs-fixer fix",
         "format:check": "php-cs-fixer fix --dry-run --diff",
         "lint": "phpstan analyse --memory-limit=1G --no-progress",
-        "test": "phpunit",
-        "test:ci": "phpunit --coverage-clover coverage/clover.xml --log-junit reports/unit.xml --testdox-text reports/unit-testdox.txt"
+        "test": "phpunit --testsuite default",
+        "test:e2e": "phpunit --testsuite e2e",
+        "sync-catalogue": "@php scripts/sync-catalogue.php",
+        "test:ci": "phpunit --testsuite default --coverage-clover coverage/clover.xml --log-junit reports/unit.xml --testdox-text reports/unit-testdox.txt"
     }
 }
